@@ -34,13 +34,16 @@ app.post('/repositories', (request, response) => {
   const { title, url, techs } = request.body;
 
   const id = generateUniqueId();
+  const formattedTechs = techs
+    .split(',')
+    .map((tech) => tech.trim().toLowerCase());
 
   const repository = {
     id,
     title,
     url,
-    techs,
     likes: 0,
+    techs: formattedTechs,
   };
 
   repositories.push(repository);
