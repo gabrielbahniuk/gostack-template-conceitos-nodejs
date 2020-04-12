@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { generateUniqueId } = require('./utils/generateUniqueId');
-const { isUuid } = require('uuidv4');
+const { uuid, isUuid } = require('uuidv4');
 const app = express();
 
 app.use(express.json());
@@ -9,10 +8,6 @@ app.use(cors());
 
 function checkId(request, response, next) {
   const { id } = request.params;
-  if (!isUuid(id)) {
-    return response.status(400).json({ msg: 'Invalid repository id.' });
-  }
-
   const repositoryIndex = repositories.findIndex(
     (repository) => repository.id === id
   );
@@ -20,6 +15,11 @@ function checkId(request, response, next) {
   if (repositoryIndex < 0) {
     return response.status(400).json({ msg: 'Repository not found.' });
   }
+
+  if (!isUuid(id)) {
+    return response.status(400).json({ msg: 'Invalid repository id.' });
+  }
+
   response.locals.repositoryIndex = repositoryIndex;
   return next();
 }
@@ -33,17 +33,12 @@ app.get('/repositories', (request, response) => {
 app.post('/repositories', (request, response) => {
   const { title, url, techs } = request.body;
 
-  const id = generateUniqueId();
-  const formattedTechs = techs
-    .split(',')
-    .map((tech) => tech.trim().toLowerCase());
-
   const repository = {
-    id,
+    id: uuid(),
     title,
     url,
+    techs,
     likes: 0,
-    techs: formattedTechs,
   };
 
   repositories.push(repository);
@@ -74,7 +69,7 @@ app.delete('/repositories/:id', checkId, (request, response) => {
 
 app.post('/repositories/:id/like', checkId, (request, response) => {
   const { repositoryIndex } = response.locals;
-  repositories[repositoryIndex].likes += 1;
+  repositories[repositoryIndex].likes++;
   return response.status(200).json(repositories[repositoryIndex]);
 });
 
